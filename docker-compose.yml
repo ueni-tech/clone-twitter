@@ -5,6 +5,9 @@ services:
     container_name: "mysql_clone-twitter"
     environment:
         MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: laravel-posting-app_db
+        MYSQL_USER: admin
+        MYSQL_PASSWORD: secret
         TZ: 'Asia/Tokyo'
     # ポートフォワードの指定（ホスト側ポート：コンテナ側ポート）
     ports:
