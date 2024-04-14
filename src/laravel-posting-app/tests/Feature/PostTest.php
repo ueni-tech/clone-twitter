@@ -91,4 +91,118 @@ class PostTest extends TestCase
         $this->assertDatabaseHas('posts', $post);
         $response->assertRedirect(route('posts.index'));
     }
+
+    // 投稿編集画面へのアクセステスト
+    public function test_guest_cannot_access_posts_edit()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->get(route('posts.edit', $post));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_user_cannot_access_others_posts_edit()
+    {
+        $user = User::factory()->create();
+        $other_user = User::factory()->create();
+        $others_post = Post::factory()->create(['user_id' => $other_user->id]);
+
+        $response = $this->actingAs($user)->get(route('posts.edit', $others_post));
+
+        $response->assertRedirect(route('posts.index'));
+    }
+
+    public function test_user_can_access_posts_edit()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->get(route('posts.edit', $post));
+
+        $response->assertStatus(200);
+    }
+
+    // 投稿更新テスト
+    public function test_guest_cannot_update_post()
+    {
+        $user = User::factory()->create();
+        $old_post = Post::factory()->create(['user_id' => $user->id]);
+
+        $new_post = [
+            'title' => 'new title',
+            'content' => 'new content',
+        ];
+
+        $response = $this->patch(route('posts.update', $old_post), $new_post);
+        $this->assertDatabaseMissing('posts', $new_post);
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_user_cannot_update_others_post()
+    {
+        $user = User::factory()->create();
+        $other_user = User::factory()->create();
+        $others_old_post = Post::factory()->create(['user_id' => $other_user->id]);
+
+        $new_post = [
+            'title' => 'new title',
+            'content' => 'new content',
+        ];
+
+        $response = $this->actingAs($user)->patch(route('posts.update', $others_old_post), $new_post);
+        $this->assertDatabaseMissing('posts', $new_post);
+        $response->assertRedirect(route('posts.index'));
+    }
+
+    public function test_user_can_update_post()
+    {
+        $user = User::factory()->create();
+        $old_post = Post::factory()->create(['user_id' => $user->id]);
+
+        $new_post = [
+            'title' => 'new title',
+            'content' => 'new content',
+        ];
+
+        $response = $this->actingAs($user)->patch(route('posts.update', $old_post), $new_post);
+        $this->assertDatabaseHas('posts', $new_post);
+        $response->assertRedirect(route('posts.show', $old_post));
+    }
+
+    // 投稿削除テスト
+    public function test_guest_cannot_destroy_post()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->delete(route('posts.destroy', $post));
+
+        $this->assertDatabaseHas('posts', ['id' => $post->id]);
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_user_cannot_destroy_others_post()
+    {
+        $user = User::factory()->create();
+        $other_user = User::factory()->create();
+        $others_post = Post::factory()->create(['user_id' => $other_user->id]);
+
+        $response = $this->actingAs($user)->delete(route('posts.destroy', $others_post));
+
+        $this->assertDatabaseHas('posts', ['id' => $others_post->id]);
+        $response->assertRedirect(route('posts.index'));
+    }
+
+    public function test_user_can_destroy_post()
+    {
+        $user = User::factory()->create();
+        $post = Post::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->delete(route('posts.destroy', $post));
+
+        $this->assertDatabaseMissing('posts', ['id' => $post->id]);
+        $response->assertRedirect(route('posts.index'));
+    }
 }
