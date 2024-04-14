@@ -24,6 +24,12 @@
   <main>
     <h1>投稿一覧</h1>
 
+    @if(session('flash_message'))
+      <p>{{ session('flash_message') }}</p>
+    @endif
+
+    <a href="{{ route('posts.create') }}">新規投稿</a>
+
     @if($posts->isNotEmpty())
       @foreach($posts as $post)
         <article>
